@@ -121,8 +121,9 @@ runs:
             echo "$changelog"
             echo "$changelog" > CHANGELOG.md
           shell: bash
-        - uses: actions/create-release@v1.1.4
+        - name:
           id: create_release
+          uses: actions/create-release@v1.1.4
           env:
             GITHUB_TOKEN: ${{ inputs.secret-input }}
           with:
