@@ -19,7 +19,7 @@ jobs:
     create_release:
         runs-on: ubuntu-latest
         steps:
-            - uses: trippedBit/action-create-release@dev
+            - uses: trippedBit/action-create-release@v1.0.0
               with:
                 secret-input: ${{ secrets.GITHUB_TOKEN }}
                 zip-filelist: "dummy_file README.md requirements.txt tests/test_unit.py"
