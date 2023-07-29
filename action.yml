@@ -118,3 +118,27 @@ runs:
             echo "$changelog"
             echo "$changelog" > CHANGELOG.md
           shell: bash
+        - uses: actions/create-release@v1.1.4
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # provided by actions, no need to create one
+          with:
+            tag_name: ${{ github.ref }}
+            release_name: "Release ${{ github.ref }}"
+            body_path: "CHANGELOG.md"
+            draft: false
+            prerelease: false
+        - run: |
+            echo "Build artifacts"
+            ls
+            version=$(echo ${{ github.ref }} | cut -d "v" -f 2)
+            echo "Version is $version"
+            zip Release_v$version.zip requirements.txt
+          shell: bash
+        - uses: actions/upload-release-asset@v1.0.2
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # provided by actions, no need to create one
+          with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            asset_path: ./Release_${{ github.ref_name }}.zip
+            asset_name: Release_${{ github.ref_name }}.zip
+            asset_content_type: application/zip
