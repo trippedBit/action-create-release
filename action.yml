@@ -9,6 +9,4 @@ inputs:
 runs:
     using: composite
     steps:
-        - name: checkout_code
-            id: checkout_code
-            uses: actions/checkout@v3
+        - uses: actions/checkout@v3
