@@ -132,14 +132,18 @@ runs:
             body_path: "CHANGELOG.md"
             draft: false
             prerelease: false
-        - run: |
+        - name: build_artifacts
+          id: build_artifacts
+          run: |
             echo "Build artifacts"
             ls
             version=$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "Version is $version"
             zip Release_v$version.zip requirements.txt
           shell: bash
-        - uses: actions/upload-release-asset@v1.0.2
+        - name: upload_artifacts
+          id: upload_artifacts
+          uses: actions/upload-release-asset@v1.0.2
           env:
             GITHUB_TOKEN: ${{ inputs.secret-input }}
           with:
