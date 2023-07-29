@@ -12,10 +12,14 @@ inputs:
 runs:
     using: composite
     steps:
-        - uses: actions/checkout@v3
-        - run: ${{ github.action_path }}/fetch.sh
+        - uses: actions/checkout@v3 # checkout branch
+        - name: git_fetch # get all tags for next step - uses script to avoid fails due to return codes
+          id: git_fetch
+          run: ${{ github.action_path }}/fetch.sh
           shell: bash
-        - run: |
+        - name: git_log # get changes between current and previous tag and store them in an output variable
+          id: git_log
+          run: |
             git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
             prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
             echo "Previous tag: $prevtag"
@@ -26,7 +30,9 @@ runs:
             echo "gitlog=$(git log $prevtag..$version --pretty=tformat:"%s %an %h")" >> "$GITHUB_OUTPUT"
           shell: bash
           continue-on-error: true
-        - run: |
+        - name: build_changelog # now build changelog based on the log from previous step
+          id: build_changelog
+          run: |
             bash --version
             echo "Building changelog"
             
@@ -121,7 +127,7 @@ runs:
             echo "$changelog"
             echo "$changelog" > CHANGELOG.md
           shell: bash
-        - name:
+        - name: create_release # creates the release using the changelog as body
           id: create_release
           uses: actions/create-release@v1.1.4
           env:
@@ -132,7 +138,7 @@ runs:
             body_path: "CHANGELOG.md"
             draft: false
             prerelease: false
-        - name: build_artifacts
+        - name: build_artifacts # creates artifact zip
           id: build_artifacts
           run: |
             echo "Build artifacts"
@@ -141,7 +147,7 @@ runs:
             echo "Version is $version"
             zip Release_v$version.zip requirements.txt
           shell: bash
-        - name: upload_artifacts
+        - name: upload_artifacts # attaches the artifact to the release
           id: upload_artifacts
           uses: actions/upload-release-asset@v1.0.2
           env:
