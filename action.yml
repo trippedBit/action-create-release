@@ -25,3 +25,98 @@ runs:
             echo "gitlog=$(git log $prevtag..$version --pretty=tformat:"%s %an %h")" >> "$GITHUB_OUTPUT"
           shell: bash
           continue-on-error: true
+        - run: |
+            bash --version
+            echo "Building changelog"
+            
+            ldocs=()
+            lfix=()
+            ldefault=()
+            lbreaking=()
+
+            regexdocs="^[.]*docs(\([a-z]*\))*[!]*:"
+            regexfeat="^[.]*feat(\([a-z]*\))*[!]*:"
+            regexfix="^[.]*fix(\([a-z]*\))*[!]*:"
+
+            gitlog=$(git log v1.0.35..HEAD --pretty=tformat:"%s by @%an in %h")
+
+            echo "Log entries to process:"
+            echo "$gitlog"
+
+            echo ""
+            echo ""
+
+            IFS=$'\n'
+            logarray=($gitlog)
+            unset IFS
+
+            for logentry in "${logarray[@]}" ; do
+                echo "Processing entry $logentry"
+                if [[ $logentry =~ $regexdocs ]] ; then
+                    echo "Adding $logentry to ldocs list"
+                    ldocs+=("${logentry}")
+                elif [[ $logentry =~ $regexfeat ]] ; then
+                    echo "Adding $logentry to lfeat list"
+                    lfeat+=("${logentry}")
+                elif [[ $logentry =~ $regexfix ]] ; then
+                    echo "Adding $logentry to lfix list"
+                    lfix+=("${logentry}")
+                else
+                    echo "Matching no list, adding to default list"
+                    ldefault+=("${logentry}")
+                fi
+
+                if [[ $logentry == *"!:"* ]] ; then
+                    echo "$logentry is breaking"
+                    lbreaking+=("${logentry}")
+                fi
+            done
+
+            echo ""
+            echo ""
+
+            echo "Creating changelog now"
+            changelog=$'# Changelog\n'
+
+            if [[ ${#lfeat[@]} > 0 ]] ; then
+                changelog+=$'## Features\n'
+                for entry in "${lfeat[@]}" ; do
+                    changelog+="${entry}"
+                done
+                changelog+=$'\n'
+            fi
+
+            if [[ ${#lfix[@]} > 0 ]] ; then
+                changelog+=$'## Fixes\n'
+                for entry in "${lfix[@]}" ; do
+                    changelog+="${entry}"
+                done
+                changelog+=$'\n'
+            fi
+
+            if [[ ${#ldocs[@]} > 0 ]] ; then
+                changelog+=$'## Docs\n'
+                for entry in "${ldocs[@]}" ; do
+                    changelog+="${entry}"
+                done
+                changelog+=$'\n'
+            fi
+
+            if [[ ${#ldefault[@]} > 0 ]] ; then
+                changelog+=$'## Others\n'
+                for entry in "${ldefault[@]}" ; do
+                    changelog+="${entry}"
+                done
+            fi
+
+            if [[ ${#lbreaking[@]} > 0 ]] ; then
+                changelog+=$'## Breaking changes\n'
+                for entry in "${lbreaking[@]}" ; do
+                    changelog+="${entry}"
+                done
+            fi
+
+            echo "Created changelog:"
+            echo "$changelog"
+            echo "$changelog" > CHANGELOG.md
+          shell: bash
