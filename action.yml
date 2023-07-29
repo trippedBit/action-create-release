@@ -5,6 +5,9 @@ inputs:
     tag-name:
         description: Tag name which will be used as release name
         required: true
+    secret-input:
+        description: Secret to use
+        required: true
 
 runs:
     using: composite
