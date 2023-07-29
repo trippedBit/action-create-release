@@ -10,9 +10,7 @@ runs:
     using: composite
     steps:
         - uses: actions/checkout@v3
-        - run: |
-            git fetch --tags
-            git fetch
+        - run: ${{ github.action_path }}/fetch.sh
           shell: bash
         - run: |
             git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
