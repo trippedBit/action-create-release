@@ -2,12 +2,15 @@ name: create-release
 description: Creates releases using tags and git logs.
 
 inputs:
-    tag-name:
-        description: Tag name which will be used as release name
-        required: true
     secret-input:
         description: Secret to use
         required: true
+    zip-options:
+        description: Options for the zip command used in step build_artifacts
+        default: ""
+    zip-filelist:
+        description: List of files to zip
+        default: "*"
 
 runs:
     using: composite
@@ -145,7 +148,7 @@ runs:
             ls
             version=$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "Version is $version"
-            zip Release_v$version.zip requirements.txt
+            zip ${{ inputs.zip-options }} Release_v$version.zip ${{ inputs.zip-filelist }}
           shell: bash
         - name: upload_artifacts # attaches the artifact to the release
           id: upload_artifacts
