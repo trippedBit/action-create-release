@@ -10,3 +10,17 @@ runs:
     using: composite
     steps:
         - uses: actions/checkout@v3
+        - run: |
+            git fetch --tags
+            git fetch
+          shell: bash
+        -run: |
+            git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
+            prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+            echo "Previous tag: $prevtag"
+            git checkout $prevtag
+            version=v$(echo ${{ github.ref }} | cut -d "v" -f 2)
+            echo "New version is $version"
+            git checkout $version
+            echo "gitlog=$(git log $prevtag..$version --pretty=tformat:"%s %an %h")" >> "$GITHUB_OUTPUT"
+          shell: bash
