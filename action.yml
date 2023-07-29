@@ -123,7 +123,7 @@ runs:
           shell: bash
         - uses: actions/create-release@v1.1.4
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # provided by actions, no need to create one
+            GITHUB_TOKEN: ${{ inputs.secret-input }}
           with:
             tag_name: ${{ github.ref }}
             release_name: "Release ${{ github.ref }}"
@@ -139,7 +139,7 @@ runs:
           shell: bash
         - uses: actions/upload-release-asset@v1.0.2
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # provided by actions, no need to create one
+            GITHUB_TOKEN: ${{ inputs.secret-input }}
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
             asset_path: ./Release_${{ github.ref_name }}.zip
