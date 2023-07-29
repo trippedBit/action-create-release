@@ -2,7 +2,7 @@ name: create-release
 description: Creates releases using tags and git logs.
 
 inputs:
-    tagname:
+    tag-name:
         description: Tag name which will be used as release name
         required: true
 
