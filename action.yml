@@ -24,3 +24,4 @@ runs:
             git checkout $version
             echo "gitlog=$(git log $prevtag..$version --pretty=tformat:"%s %an %h")" >> "$GITHUB_OUTPUT"
           shell: bash
+          continue-on-error: true
