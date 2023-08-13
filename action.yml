@@ -20,9 +20,13 @@ runs:
           id: git_fetch
           run: ${{ github.action_path }}/fetch.sh
           shell: bash
-        - name: git_log # get changes between current and previous tag and store them in an output variable
-          id: git_log
+        - name: build_changelog # now build changelog
+          id: build_changelog
           run: |
+            bash --version
+            echo "Building changelog"
+
+            echo "First get changes between previous and current tag"
             git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
             prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
             echo "Previous tag: $prevtag"
@@ -30,14 +34,12 @@ runs:
             version=v$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "New version is $version"
             git checkout $version
-            echo "gitlog=$(git log $prevtag..$version --pretty=tformat:"%s %an %h")" >> "$GITHUB_OUTPUT"
-          shell: bash
-          continue-on-error: true
-        - name: build_changelog # now build changelog based on the log from previous step
-          id: build_changelog
-          run: |
-            bash --version
-            echo "Building changelog"
+            gitlog=$(git log $prevtag..$version --pretty=tformat:"%s @%an %h")
+
+            echo "Log entries to process:"
+            echo "$gitlog"
+            echo ""
+            echo ""
             
             ldocs=()
             lfix=()
@@ -47,14 +49,6 @@ runs:
             regexdocs="^[.]*docs(\([a-z]*\))*[!]*:"
             regexfeat="^[.]*feat(\([a-z]*\))*[!]*:"
             regexfix="^[.]*fix(\([a-z]*\))*[!]*:"
-
-            gitlog=$(git log v1.0.35..HEAD --pretty=tformat:"%s by @%an in %h")
-
-            echo "Log entries to process:"
-            echo "$gitlog"
-
-            echo ""
-            echo ""
 
             IFS=$'\n'
             logarray=($gitlog)
@@ -130,6 +124,7 @@ runs:
             echo "$changelog"
             echo "$changelog" > CHANGELOG.md
           shell: bash
+          continue-on-error: true
         - name: create_release # creates the release using the changelog as body
           id: create_release
           uses: actions/create-release@v1.1.4
