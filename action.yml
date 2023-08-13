@@ -16,6 +16,8 @@ runs:
     using: composite
     steps:
         - uses: actions/checkout@v3 # checkout branch
+          with:
+            fetch-depth: 0
         - name: git_fetch # get all tags for next step - uses script to avoid fails due to return codes
           id: git_fetch
           run: ${{ github.action_path }}/fetch.sh
@@ -30,10 +32,12 @@ runs:
             git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
             prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
             echo "Previous tag: $prevtag"
-            git checkout $prevtag
             version=v$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "New version is $version"
-            git checkout $version
+
+            echo "Number of commits:"
+            echo git log $prevtag..$version --pretty=tformat:"%s @%an %h" | wc -l
+
             gitlog=$(git log $prevtag..$version --pretty=tformat:"%s @%an %h")
 
             echo "Log entries to process:"
@@ -85,7 +89,7 @@ runs:
             if [[ ${#lfeat[@]} > 0 ]] ; then
                 changelog+=$'## Features\n'
                 for entry in "${lfeat[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="${entry}<br>"
                 done
                 changelog+=$'\n'
             fi
@@ -93,7 +97,7 @@ runs:
             if [[ ${#lfix[@]} > 0 ]] ; then
                 changelog+=$'## Fixes\n'
                 for entry in "${lfix[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="${entry}<br>"
                 done
                 changelog+=$'\n'
             fi
@@ -101,7 +105,7 @@ runs:
             if [[ ${#ldocs[@]} > 0 ]] ; then
                 changelog+=$'## Docs\n'
                 for entry in "${ldocs[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="${entry}<br>"
                 done
                 changelog+=$'\n'
             fi
@@ -109,15 +113,17 @@ runs:
             if [[ ${#ldefault[@]} > 0 ]] ; then
                 changelog+=$'## Others\n'
                 for entry in "${ldefault[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="${entry}<br>"
                 done
+                changelog+=$'\n'
             fi
 
             if [[ ${#lbreaking[@]} > 0 ]] ; then
                 changelog+=$'## Breaking changes\n'
-                for entry in "${lbreaking[@]}" ; do
+                for entry in "${lbreaking[@]}<br>" ; do
                     changelog+="${entry}"
                 done
+                changelog+=$'\n'
             fi
 
             echo "Created changelog:"
