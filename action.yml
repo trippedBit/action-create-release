@@ -18,7 +18,6 @@ runs:
         - uses: actions/checkout@v3 # checkout branch
           with:
             fetch-depth: 0
-            ref: fix-gitlog
         - name: git_fetch # get all tags for next step - uses script to avoid fails due to return codes
           id: git_fetch
           run: ${{ github.action_path }}/fetch.sh
