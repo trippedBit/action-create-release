@@ -30,10 +30,12 @@ runs:
             git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
             prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
             echo "Previous tag: $prevtag"
-            git checkout $prevtag
             version=v$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "New version is $version"
-            git checkout $version
+
+            echo "Number of commits:"
+            echo git log $prevtag..$version --pretty=tformat:"%s @%an %h" | wc -l
+
             gitlog=$(git log $prevtag..$version --pretty=tformat:"%s @%an %h")
 
             echo "Log entries to process:"
