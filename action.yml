@@ -34,7 +34,7 @@ runs:
             version=v$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "New version is $version"
             git checkout $version
-            gitlog=$(git log $prevtag..$version --pretty=tformat:"%s %an %h")
+            gitlog=$(git log $prevtag..$version --pretty=tformat:"%s @%an %h")
 
             echo "Log entries to process:"
             echo "$gitlog"
