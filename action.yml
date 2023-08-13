@@ -115,6 +115,7 @@ runs:
                 for entry in "${ldefault[@]}" ; do
                     changelog+="${entry}"
                 done
+                changelog+=$'\n'
             fi
 
             if [[ ${#lbreaking[@]} > 0 ]] ; then
@@ -122,6 +123,7 @@ runs:
                 for entry in "${lbreaking[@]}" ; do
                     changelog+="${entry}"
                 done
+                changelog+=$'\n'
             fi
 
             echo "Created changelog:"
