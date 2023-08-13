@@ -34,7 +34,7 @@ runs:
             echo "New version is $version"
 
             echo "Number of commits:"
-            echo git log $prevtag..$version --pretty=tformat:"%s @%an %h" | wc -l
+            echo git log --full-history $prevtag..$version --pretty=tformat:"%s @%an %h" | wc -l
 
             gitlog=$(git log $prevtag..$version --pretty=tformat:"%s @%an %h")
 
