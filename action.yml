@@ -89,7 +89,7 @@ runs:
             if [[ ${#lfeat[@]} > 0 ]] ; then
                 changelog+=$'## Features\n'
                 for entry in "${lfeat[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="${entry}<br>"
                 done
                 changelog+=$'\n'
             fi
@@ -97,7 +97,7 @@ runs:
             if [[ ${#lfix[@]} > 0 ]] ; then
                 changelog+=$'## Fixes\n'
                 for entry in "${lfix[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="${entry}<br>"
                 done
                 changelog+=$'\n'
             fi
@@ -105,7 +105,7 @@ runs:
             if [[ ${#ldocs[@]} > 0 ]] ; then
                 changelog+=$'## Docs\n'
                 for entry in "${ldocs[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="${entry}<br>"
                 done
                 changelog+=$'\n'
             fi
@@ -113,14 +113,14 @@ runs:
             if [[ ${#ldefault[@]} > 0 ]] ; then
                 changelog+=$'## Others\n'
                 for entry in "${ldefault[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="${entry}<br>"
                 done
                 changelog+=$'\n'
             fi
 
             if [[ ${#lbreaking[@]} > 0 ]] ; then
                 changelog+=$'## Breaking changes\n'
-                for entry in "${lbreaking[@]}" ; do
+                for entry in "${lbreaking[@]}<br>" ; do
                     changelog+="${entry}"
                 done
                 changelog+=$'\n'
