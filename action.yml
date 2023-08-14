@@ -5,6 +5,9 @@ inputs:
     secret-input:
         description: Secret to use
         required: true
+    remove-merges:
+        description: Option to remove merges from changelog
+        default: "false"
     zip-options:
         description: Options for the zip command used in step build_artifacts
         default: ""
@@ -36,9 +39,21 @@ runs:
             echo "New version is $version"
 
             echo "Number of commits:"
-            echo git log $prevtag..$version --pretty=tformat:"%s @%an %h" | wc -l
+            if [[ ${{ remove-merges }} == "false" ]] ; then
+                echo "Log with merges"
+                echo git log $prevtag..$version --pretty=tformat:"%s @%an %h" | wc -l
+            else
+                echo "Log without merges"
+                echo git log $prevtag..$version --no-merges --pretty=tformat:"%s @%an %h" | wc -l
+            fi
 
-            gitlog=$(git log $prevtag..$version --pretty=tformat:"%s @%an %h")
+            if [[ ${{ remove-merges }} == "false" ]] ; then
+                echo "Log with merges"
+                gitlog=$(git log $prevtag..$version --pretty=tformat:"%s @%an %h")
+            else
+                echo "Log without merges"
+                gitlog=$(git log $prevtag..$version --no-merges --pretty=tformat:"%s @%an %h")
+            fi
 
             echo "Log entries to process:"
             echo "$gitlog"
