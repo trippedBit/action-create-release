@@ -153,7 +153,7 @@ runs:
           continue-on-error: true
         - name: create_release # creates the release using the changelog as body
           id: create_release
-          uses: actions/create-release@v1.1.4
+          uses: trippedBit/create-release@dev
           env:
             GITHUB_TOKEN: ${{ inputs.secret-input }}
           with:
