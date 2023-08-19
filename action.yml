@@ -166,6 +166,7 @@ runs:
           id: debug_print
           run: |
             echo "Browser download URL: $env.browser_download_url"
+          shell: bash
         - name: build_artifacts # creates artifact zip
           id: build_artifacts
           run: |
