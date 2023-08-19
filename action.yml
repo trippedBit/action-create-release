@@ -167,3 +167,5 @@ runs:
             echo "Version is $version"
             gh release create $version --notes-file CHANGELOG.md Release_v$version.zip
           shell: bash
+          env:
+            GITHUB_TOKEN: ${{ secret-input }}
