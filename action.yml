@@ -165,7 +165,7 @@ runs:
           run: |
             version=$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "Version is $version"
-            gh release create $version --title "Release $version" --notes-file CHANGELOG.md Release_v$version.zip
+            gh release create $version --title "Release v$version" --notes-file CHANGELOG.md Release_v$version.zip
           shell: bash
           env:
             GITHUB_TOKEN: ${{ inputs.secret-input }}
