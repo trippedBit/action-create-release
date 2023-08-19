@@ -168,11 +168,11 @@ runs:
           shell: bash
         - name: upload_artifacts # attaches the artifact to the release
           id: upload_artifacts
-          uses: actions/upload-release-asset@v1.0.2
+          uses: trippedBit/upload-release-asset@dev
           env:
             GITHUB_TOKEN: ${{ inputs.secret-input }}
           with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            upload_url: ${{ browser_download_url }}
             asset_path: ./Release_${{ github.ref_name }}.zip
             asset_name: Release_${{ github.ref_name }}.zip
             asset_content_type: application/zip
