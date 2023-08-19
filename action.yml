@@ -5,7 +5,7 @@ inputs:
     secret-input:
         description: Secret to use
         required: true
-    remove-merges:
+    removeMerges:
         description: Option to remove merges from changelog
         default: "false"
     zip-options:
@@ -39,7 +39,7 @@ runs:
             echo "New version is $version"
 
             echo "Number of commits:"
-            if [[ ${{ remove-merges }} == "false" ]] ; then
+            if [[ ${{ removeMerges }} == "false" ]] ; then
                 echo "Log with merges"
                 echo git log $prevtag..$version --pretty=tformat:"%s @%an %h" | wc -l
             else
@@ -47,7 +47,7 @@ runs:
                 echo git log $prevtag..$version --no-merges --pretty=tformat:"%s @%an %h" | wc -l
             fi
 
-            if [[ ${{ remove-merges }} == "false" ]] ; then
+            if [[ ${{ removeMerges }} == "false" ]] ; then
                 echo "Log with merges"
                 gitlog=$(git log $prevtag..$version --pretty=tformat:"%s @%an %h")
             else
