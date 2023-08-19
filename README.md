@@ -28,5 +28,6 @@ jobs:
 ### Inputs
 The following inputs are available:
 * secret-input: Secret to use. This is a required input.
+* remove-merges: Option to remove merges from changelog. This is an optional input, defaults to "false".
 * zip-options: Options for the zip command used in step build_artifacts. This is an optional input, defaults to "" (empty string).
 * zip-filelist: List of files to zip. This is an optional input, defaults to "*" (all files in current directory).
