@@ -5,6 +5,12 @@ inputs:
     secret-input:
         description: Secret to use
         required: true
+    remove-merges:
+        description: Option to remove merges from changelog
+        default: "false"
+    draft:
+        description: Option to create a draft release instead of publishing it
+        default: "true"
     zip-options:
         description: Options for the zip command used in step build_artifacts
         default: ""
@@ -16,28 +22,46 @@ runs:
     using: composite
     steps:
         - uses: actions/checkout@v3 # checkout branch
+          with:
+            fetch-depth: 0
         - name: git_fetch # get all tags for next step - uses script to avoid fails due to return codes
           id: git_fetch
           run: ${{ github.action_path }}/fetch.sh
           shell: bash
-        - name: git_log # get changes between current and previous tag and store them in an output variable
-          id: git_log
-          run: |
-            git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
-            prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
-            echo "Previous tag: $prevtag"
-            git checkout $prevtag
-            version=v$(echo ${{ github.ref }} | cut -d "v" -f 2)
-            echo "New version is $version"
-            git checkout $version
-            echo "gitlog=$(git log $prevtag..$version --pretty=tformat:"%s %an %h")" >> "$GITHUB_OUTPUT"
-          shell: bash
-          continue-on-error: true
-        - name: build_changelog # now build changelog based on the log from previous step
+        - name: build_changelog # now build changelog
           id: build_changelog
           run: |
             bash --version
             echo "Building changelog"
+
+            echo "First get changes between previous and current tag"
+            git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
+            prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+            echo "Previous tag: $prevtag"
+            version=v$(echo ${{ github.ref }} | cut -d "v" -f 2)
+            echo "New version is $version"
+
+            echo "Number of commits:"
+            if [[ ${{ inputs.remove-merges }} == "false" ]] ; then
+                echo "Log with merges"
+                echo git log $prevtag..$version --pretty=tformat:"%s @%an %h" | wc -l
+            else
+                echo "Log without merges"
+                echo git log $prevtag..$version --no-merges --pretty=tformat:"%s @%an %h" | wc -l
+            fi
+
+            if [[ ${{ inputs.remove-merges }} == "false" ]] ; then
+                echo "Log with merges"
+                gitlog=$(git log $prevtag..$version --pretty=tformat:"%s @%an %h")
+            else
+                echo "Log without merges"
+                gitlog=$(git log $prevtag..$version --no-merges --pretty=tformat:"%s @%an %h")
+            fi
+
+            echo "Log entries to process:"
+            echo "$gitlog"
+            echo ""
+            echo ""
             
             ldocs=()
             lfix=()
@@ -47,14 +71,6 @@ runs:
             regexdocs="^[.]*docs(\([a-z]*\))*[!]*:"
             regexfeat="^[.]*feat(\([a-z]*\))*[!]*:"
             regexfix="^[.]*fix(\([a-z]*\))*[!]*:"
-
-            gitlog=$(git log v1.0.35..HEAD --pretty=tformat:"%s by @%an in %h")
-
-            echo "Log entries to process:"
-            echo "$gitlog"
-
-            echo ""
-            echo ""
 
             IFS=$'\n'
             logarray=($gitlog)
@@ -91,7 +107,8 @@ runs:
             if [[ ${#lfeat[@]} > 0 ]] ; then
                 changelog+=$'## Features\n'
                 for entry in "${lfeat[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="* ${entry}"
+                    changelog+=$'\n'
                 done
                 changelog+=$'\n'
             fi
@@ -99,7 +116,8 @@ runs:
             if [[ ${#lfix[@]} > 0 ]] ; then
                 changelog+=$'## Fixes\n'
                 for entry in "${lfix[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="* ${entry}"
+                    changelog+=$'\n'
                 done
                 changelog+=$'\n'
             fi
@@ -107,7 +125,8 @@ runs:
             if [[ ${#ldocs[@]} > 0 ]] ; then
                 changelog+=$'## Docs\n'
                 for entry in "${ldocs[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="* ${entry}"
+                    changelog+=$'\n'
                 done
                 changelog+=$'\n'
             fi
@@ -115,32 +134,26 @@ runs:
             if [[ ${#ldefault[@]} > 0 ]] ; then
                 changelog+=$'## Others\n'
                 for entry in "${ldefault[@]}" ; do
-                    changelog+="${entry}"
+                    changelog+="* ${entry}"
+                    changelog+=$'\n'
                 done
+                changelog+=$'\n'
             fi
 
             if [[ ${#lbreaking[@]} > 0 ]] ; then
                 changelog+=$'## Breaking changes\n'
-                for entry in "${lbreaking[@]}" ; do
-                    changelog+="${entry}"
+                for entry in "${lbreaking[@]}<br>" ; do
+                    changelog+="* ${entry}"
+                    changelog+=$'\n'
                 done
+                changelog+=$'\n'
             fi
 
             echo "Created changelog:"
             echo "$changelog"
             echo "$changelog" > CHANGELOG.md
           shell: bash
-        - name: create_release # creates the release using the changelog as body
-          id: create_release
-          uses: actions/create-release@v1.1.4
-          env:
-            GITHUB_TOKEN: ${{ inputs.secret-input }}
-          with:
-            tag_name: ${{ github.ref }}
-            release_name: "Release ${{ github.ref }}"
-            body_path: "CHANGELOG.md"
-            draft: false
-            prerelease: false
+          continue-on-error: true
         - name: build_artifacts # creates artifact zip
           id: build_artifacts
           run: |
@@ -150,13 +163,16 @@ runs:
             echo "Version is $version"
             zip ${{ inputs.zip-options }} Release_v$version.zip ${{ inputs.zip-filelist }}
           shell: bash
-        - name: upload_artifacts # attaches the artifact to the release
-          id: upload_artifacts
-          uses: actions/upload-release-asset@v1.0.2
+        - name: create_release # creates the release using the changelog as body
+          id: create_release
+          run: |
+            version=$(echo ${{ github.ref }} | cut -d "v" -f 2)
+            echo "Version is $version"
+            if [[ ${{ inputs.draft }} == "false" ]] ; then
+                gh release create $version --title "Release v$version" --notes-file CHANGELOG.md Release_v$version.zip
+            else
+                gh release create $version --draft --title "Release v$version" --notes-file CHANGELOG.md Release_v$version.zip
+            fi
+          shell: bash
           env:
             GITHUB_TOKEN: ${{ inputs.secret-input }}
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./Release_${{ github.ref_name }}.zip
-            asset_name: Release_${{ github.ref_name }}.zip
-            asset_content_type: application/zip
