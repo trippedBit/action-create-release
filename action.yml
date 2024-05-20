@@ -8,6 +8,9 @@ inputs:
     remove-merges:
         description: Option to remove merges from changelog
         default: "false"
+    draft:
+        description: Option to create a draft release instead of publishing it
+        default: "true"
     zip-options:
         description: Options for the zip command used in step build_artifacts
         default: ""
@@ -165,7 +168,11 @@ runs:
           run: |
             version=$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "Version is $version"
-            gh release create $version --title "Release v$version" --notes-file CHANGELOG.md Release_v$version.zip
+            if [[ ${{ inputs.draft }} == "false" ]] ; then
+                gh release create $version --title "Release v$version" --notes-file CHANGELOG.md Release_v$version.zip
+            else
+                gh release create $version --draft --title "Release v$version" --notes-file CHANGELOG.md Release_v$version.zip
+            fi
           shell: bash
           env:
             GITHUB_TOKEN: ${{ inputs.secret-input }}
