@@ -29,5 +29,7 @@ jobs:
 The following inputs are available:
 * secret-input: Secret to use. This is a required input.
 * remove-merges: Option to remove merges from changelog. This is an optional input, defaults to "false".
+* draft: Option to create a draft release instead of publishing it. This is an optional input, defaults to "true".
+* start-tag: Option to set the starting tag instead of kust using the last one. This is an optional input, defaults to "" (empty string).
 * zip-options: Options for the zip command used in step build_artifacts. This is an optional input, defaults to "" (empty string).
 * zip-filelist: List of files to zip. This is an optional input, defaults to "*" (all files in current directory).

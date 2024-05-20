@@ -8,6 +8,12 @@ inputs:
     remove-merges:
         description: Option to remove merges from changelog
         default: "false"
+    draft:
+        description: Option to create a draft release instead of publishing it
+        default: "true"
+    start-tag:
+        description: "Option to set the starting tag instead of kust using the last one"
+        default: ""
     zip-options:
         description: Options for the zip command used in step build_artifacts
         default: ""
@@ -32,8 +38,12 @@ runs:
             echo "Building changelog"
 
             echo "First get changes between previous and current tag"
-            git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
-            prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+            if [[ ${{ inputs.start-tag }} == "" ]] ; then
+                git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
+                prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+            else
+                prevtag=${{ inputs.start-tag }}
+            fi
             echo "Previous tag: $prevtag"
             version=v$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "New version is $version"
@@ -165,7 +175,11 @@ runs:
           run: |
             version=$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "Version is $version"
-            gh release create $version --title "Release v$version" --notes-file CHANGELOG.md Release_v$version.zip
+            if [[ ${{ inputs.draft }} == "false" ]] ; then
+                gh release create $version --title "Release v$version" --notes-file CHANGELOG.md Release_v$version.zip
+            else
+                gh release create $version --draft --title "Release v$version" --notes-file CHANGELOG.md Release_v$version.zip
+            fi
           shell: bash
           env:
             GITHUB_TOKEN: ${{ inputs.secret-input }}
