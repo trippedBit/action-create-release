@@ -39,9 +39,11 @@ runs:
 
             echo "First get changes between previous and current tag"
             if [[ ${{ inputs.start-tag }} == "" ]] ; then
+                echo "No start tag given, trying to get latest tag..."
                 git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
                 prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
             else
+                echo "Start tag given"
                 prevtag=${{ inputs.start-tag }}
             fi
             echo "Previous tag: $prevtag"
