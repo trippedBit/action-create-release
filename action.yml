@@ -38,14 +38,14 @@ runs:
             echo "Building changelog"
 
             echo "First get changes between previous and current tag"
-            if [[ ${{ inputs.start-tag }} == "" ]] ; then
+            #if [[ ${{ inputs.start-tag }} == "" ]] ; then
                 echo "No start tag given, trying to get latest tag..."
                 git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1)
                 prevtag=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
-            else
-                echo "Start tag given"
-                prevtag=${{ inputs.start-tag }}
-            fi
+            #else
+                #echo "Start tag given"
+                #prevtag=${{ inputs.start-tag }}
+            #fi
             echo "Previous tag: $prevtag"
             version=v$(echo ${{ github.ref }} | cut -d "v" -f 2)
             echo "New version is $version"
